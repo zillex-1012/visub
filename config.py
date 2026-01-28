@@ -13,14 +13,13 @@ WHISPER_MODELS = {
 
 # Translation Models via OpenRouter
 TRANSLATION_MODELS = {
+    # Free Models
     "meta-llama/llama-3.3-70b-instruct:free": "Llama 3.3 70B (Free - Khuyên dùng)",
     "allenai/molmo-2-8b:free": "Molmo 2 8B (Free)",
-    "openai/gpt-oss-120b:free": "GPT-OSS 120B (Free)",
-    "google/gemini-2.0-flash-exp": "Gemini 2.0 Flash (Free)",
-    "deepseek/deepseek-chat": "DeepSeek Chat (Rẻ nhất)",
-    "openai/gpt-4o-mini": "GPT-4o Mini (Cân bằng)",
-    "openai/gpt-4o": "GPT-4o (Tốt nhất)",
-    "anthropic/claude-3.5-sonnet": "Claude 3.5 Sonnet (Rất tốt)"
+    
+    # Paid Models
+    "meta-llama/llama-3.1-8b-instruct": "Llama 3.1 8B ($0.02/$0.05 per 1M)",
+    "google/gemini-2.5-flash-lite": "Gemini 2.5 Flash Lite ($0.10/$0.40 per 1M)"
 }
 
 # TTS Providers

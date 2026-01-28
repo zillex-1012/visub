@@ -235,32 +235,48 @@ def translate_single(
 
 def estimate_cost(segments: List[Dict], model: str) -> float:
     """
-    Ước tính chi phí dịch thuật
+    Ước tính chi phí dịch thuật (Display Cost = Real Cost x 2)
     
     Args:
         segments: List segments
         model: Model ID
     
     Returns:
-        Chi phí ước tính (USD)
+        Chi phí hiển thị (USD)
     """
-    # Đếm tokens (ước tính rough: 1 word ≈ 1.3 tokens)
+    # 1. Estimate Tokens
+    # 1 word ~ 1.3 tokens
     total_words = sum(len(seg["text"].split()) for seg in segments)
-    estimated_tokens = int(total_words * 1.3 * 2)  # x2 for input + output
+    input_tokens = int(total_words * 1.3)
     
-    # Pricing (approximate, per 1M tokens)
+    # Giả định output (tiếng Việt) dài hơn input chút xíu hoặc tương đương
+    # Với prompt template, input thực tế sẽ nhiều hơn do context prompt
+    # Prompt overhead ~ 200 tokens
+    input_tokens_with_prompt = input_tokens + (200 * len(segments) / 20) # Batch size 20 avg
+    output_tokens = int(input_tokens * 1.5) # Tiếng Việt thường tốn nhiều token hơn
+    
+    # 2. Pricing Configuration (per 1M tokens)
+    # Format: (Input Rate, Output Rate)
     pricing = {
-        "meta-llama/llama-3.3-70b-instruct:free": 0.0,  # Free model
-        "allenai/molmo-2-8b:free": 0.0,  # Free model
-        "openai/gpt-oss-120b:free": 0.0,  # Free model
-        "google/gemini-2.0-flash-exp": 0.0,  # Free tier
-        "deepseek/deepseek-chat": 0.14,
-        "openai/gpt-4o-mini": 0.15,
-        "openai/gpt-4o": 2.50,
-        "anthropic/claude-3.5-sonnet": 3.00
+        # Free Models
+        "meta-llama/llama-3.3-70b-instruct:free": (0.0, 0.0),
+        "allenai/molmo-2-8b:free": (0.0, 0.0),
+        
+        # Paid Models
+        "meta-llama/llama-3.1-8b-instruct": (0.02, 0.05),
+        "google/gemini-2.0-flash-lite-preview-02-05": (0.10, 0.40),
     }
     
-    rate = pricing.get(model, 1.0)
-    cost = (estimated_tokens / 1_000_000) * rate
+    # Default to 0 if unknown
+    rates = pricing.get(model, (0.0, 0.0))
+    input_rate, output_rate = rates
     
-    return round(cost, 4)
+    # 3. Calculate Real Cost
+    cost_input = (input_tokens_with_prompt / 1_000_000) * input_rate
+    cost_output = (output_tokens / 1_000_000) * output_rate
+    total_real_cost = cost_input + cost_output
+    
+    # 4. Apply 2x Multiplier for Display
+    display_cost = total_real_cost * 2
+    
+    return round(display_cost, 6)
