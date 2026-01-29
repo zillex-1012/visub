@@ -1,6 +1,6 @@
 """
-VietDub - Main Streamlit Application
-Công cụ AI dubbing video
+VietDub Solo - Main Streamlit Application
+Công cụ dubbing video cá nhân với AI
 """
 
 import streamlit as st
@@ -30,7 +30,7 @@ from utils.file_utils import (
 # ============================================
 
 st.set_page_config(
-    page_title="VietDub",
+    page_title="VietDub Solo",
     page_icon="🎬",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -697,6 +697,22 @@ def render_step3():
     
     with col3:
         export_srt_only = st.checkbox("Chỉ export SRT")
+
+    # Advanced Subtitle Settings
+    if burn_subs:
+        with st.expander("🎨 Tùy chỉnh Subtitle", expanded=False):
+            sub_col1, sub_col2 = st.columns(2)
+            with sub_col1:
+                font_size = st.slider("Cỡ chữ (Font Size)", 18, 48, 24, 2)
+            with sub_col2:
+                max_width = st.slider(
+                    "Độ dài dòng tối đa (ký tự)", 
+                    30, 80, 50, 
+                    help="Giới hạn số ký tự để tránh sub quá dài. Mặc định 50 ký tự ~ 2 dòng."
+                )
+    else:
+        font_size = 24
+        max_width = 50
     
     # Export buttons
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
@@ -735,7 +751,9 @@ def render_step3():
                         original_volume=st.session_state.original_volume,
                         dubbed_volume=st.session_state.dubbed_volume,
                         burn_subtitles=burn_subs,
-                        preview_duration=60  # Chỉ render 60s
+                        preview_duration=60,  # Chỉ render 60s
+                        font_size=font_size,
+                        max_line_width=max_width
                     )
                     
                     if success and os.path.exists(preview_path):
@@ -790,7 +808,9 @@ def render_step3():
                         output_path,
                         original_volume=st.session_state.original_volume,
                         dubbed_volume=st.session_state.dubbed_volume,
-                        burn_subtitles=burn_subs
+                        burn_subtitles=burn_subs,
+                        font_size=font_size,
+                        max_line_width=max_width
                     )
                     
                     if success and os.path.exists(output_path):
@@ -831,7 +851,7 @@ def main():
     render_sidebar()
     
     # Header
-    st.markdown('<h1 class="main-header">🎬 VietDub</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-header">🎬 VietDub Solo</h1>', unsafe_allow_html=True)
     
     # Step indicator
     steps = ["Input", "Edit", "Export"]
