@@ -1,5 +1,5 @@
 """
-VietDub Solo - Main Streamlit Application
+VietDub - Main Streamlit Application
 Công cụ dubbing video cá nhân với AI
 """
 
@@ -30,7 +30,7 @@ from utils.file_utils import (
 # ============================================
 
 st.set_page_config(
-    page_title="VietDub Solo",
+    page_title="VietDub",
     page_icon="🎬",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -831,7 +831,7 @@ def main():
     render_sidebar()
     
     # Header
-    st.markdown('<h1 class="main-header">🎬 VietDub Solo</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-header">🎬 VietDub</h1>', unsafe_allow_html=True)
     
     # Step indicator
     steps = ["Input", "Edit", "Export"]
