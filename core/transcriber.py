@@ -83,56 +83,7 @@ def transcribe_audio(
             "audio_path": ""   # Sẽ điền sau khi TTS
         })
     
-    # Merge segments ngắn để tối ưu cho dubbing
-    segments = merge_short_segments(segments, min_duration=1.5)
-    
-    # Re-index IDs
-    for i, seg in enumerate(segments):
-        seg["id"] = i + 1
-        
     return segments
-
-
-def merge_short_segments(segments: List[Dict], min_duration: float = 1.5) -> List[Dict]:
-    """
-    Gộp các segments quá ngắn vào segment tiếp theo để tránh voice chồng chéo
-    
-    Args:
-        segments: List segments gốc
-        min_duration: Duration tối thiểu (seconds)
-        
-    Returns:
-        List segments đã merge
-    """
-    if not segments:
-        return []
-        
-    merged = []
-    current_seg = segments[0]
-    
-    for next_seg in segments[1:]:
-        # Tính duration của segment hiện tại
-        duration = current_seg["end"] - current_seg["start"]
-        
-        # Kiểm tra điều kiện merge:
-        # 1. Segment hiện tại quá ngắn (< min_duration)
-        # 2. Hoặc khoảng cách với segment tiếp theo quá gần (< 0.5s)
-        gap = next_seg["start"] - current_seg["end"]
-        
-        if duration < min_duration or gap < 0.5:
-            # Merge với next_seg
-            current_seg["end"] = next_seg["end"]
-            current_seg["text"] += " " + next_seg["text"]
-            # Giữ start time của current, end time của next
-        else:
-            # Segment hiện tại đã đủ tốt, đẩy vào list
-            merged.append(current_seg)
-            current_seg = next_seg
-            
-    # Đừng quên segment cuối cùng
-    merged.append(current_seg)
-    
-    return merged
 
 
 def transcribe_video(

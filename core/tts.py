@@ -253,51 +253,23 @@ def get_audio_duration(audio_path: str) -> float:
 def fit_audio_to_duration(
     audio_path: str,
     target_duration: float,
-    max_speed: float = 1.5  # Giới hạn max speed 1.5 theo yêu cầu
+    max_speed: float = 1.5  # Tăng max speed lên 1.5
 ) -> str:
     """
-    Điều chỉnh audio để fit vào duration mục tiêu một cách triệt để
-    Chỉ tăng tốc khi cần thiết (audio dài hơn target)
+    Điều chỉnh audio để fit vào duration mục tiêu
     """
     current_duration = get_audio_duration(audio_path)
     
-    # Nếu audio đã ngắn hơn target, không cần làm gì (giữ tốc độ gốc)
     if current_duration <= target_duration:
         return audio_path
     
-    # Tính speed cần thiết + buffer 15% để đảm bảo không bị lấn
-    required_speed = (current_duration / target_duration) * 1.15
+    # Tính speed cần thiết + 10% buffer an toàn
+    required_speed = (current_duration / target_duration) * 1.1
     
-    # Áp dụng speed up
+    # Giới hạn speed
     actual_speed = min(required_speed, max_speed)
-    new_audio_path = adjust_audio_speed(audio_path, actual_speed)
     
-    # Kiểm tra lại duration sau khi speed up
-    new_duration = get_audio_duration(new_audio_path)
-    
-    # Nếu vẫn còn dài hơn target (do chạm trần max_speed), cần biện pháp mạnh hơn
-    if new_duration > target_duration:
-        try:
-            # Cắt bớt phần dư thừa (thường là silence cuối câu)
-            # Hoặc force cắt nếu chênh lệch không quá lớn (< 0.5s)
-            diff = new_duration - target_duration
-            if diff < 1.0: # Chấp nhận cắt bớt 1s cuối nếu cần thiết
-                final_path = tempfile.mktemp(suffix=".mp3")
-                cmd = [
-                    "ffmpeg", "-y",
-                    "-i", new_audio_path,
-                    "-t", str(target_duration), # Force duration
-                    "-c", "copy",
-                    final_path
-                ]
-                subprocess.run(cmd, capture_output=True, check=True)
-                if os.path.exists(new_audio_path):
-                    os.remove(new_audio_path)
-                return final_path
-        except Exception as e:
-            print(f"Error trimming audio: {e}")
-            
-    return new_audio_path
+    return adjust_audio_speed(audio_path, actual_speed)
 
 
 import subprocess

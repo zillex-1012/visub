@@ -233,43 +233,30 @@ def translate_single(
     return response.strip() if response else text
 
 
-def estimate_cost(segments: List[Dict], model: str, batch_size: int = 20) -> float:
+def estimate_cost(segments: List[Dict], model: str) -> float:
     """
     Ước tính chi phí dịch thuật (Display Cost = Real Cost x 2)
-    Logic tính toán nghiêm ngặt bao gồm Overhead của JSON và Prompt
     
     Args:
         segments: List segments
         model: Model ID
-        batch_size: Kích thước batch (default 20)
     
     Returns:
         Chi phí hiển thị (USD)
     """
-    import math
-    
-    # 1. Base Text Tokens (1 word ~ 1.3 tokens)
+    # 1. Estimate Tokens
+    # 1 word ~ 1.3 tokens
     total_words = sum(len(seg["text"].split()) for seg in segments)
-    text_tokens = int(total_words * 1.3)
+    input_tokens = int(total_words * 1.3)
     
-    # 2. Input Overhead
-    # Prompt template ~350 tokens (Instruction + Example)
-    # JSON structure per segment: {"id": 123, "english": "..."} ~12 tokens
-    num_batches = math.ceil(len(segments) / batch_size)
-    prompt_overhead = num_batches * 350
-    json_overhead_input = len(segments) * 12
+    # Giả định output (tiếng Việt) dài hơn input chút xíu hoặc tương đương
+    # Với prompt template, input thực tế sẽ nhiều hơn do context prompt
+    # Prompt overhead ~ 200 tokens
+    input_tokens_with_prompt = input_tokens + (200 * len(segments) / 20) # Batch size 20 avg
+    output_tokens = int(input_tokens * 1.5) # Tiếng Việt thường tốn nhiều token hơn
     
-    total_input_tokens = text_tokens + prompt_overhead + json_overhead_input
-    
-    # 3. Output Estimation
-    # Vietnamese expansion ~1.5x input text
-    # JSON structure per segment: {"id": 123, "vietnamese": "..."} ~12 tokens
-    output_text_tokens = int(text_tokens * 1.5)
-    json_overhead_output = len(segments) * 12
-    
-    total_output_tokens = output_text_tokens + json_overhead_output
-    
-    # 4. Pricing Configuration (per 1M tokens)
+    # 2. Pricing Configuration (per 1M tokens)
+    # Format: (Input Rate, Output Rate)
     pricing = {
         # Free Models
         "meta-llama/llama-3.3-70b-instruct:free": (0.0, 0.0),
@@ -277,19 +264,19 @@ def estimate_cost(segments: List[Dict], model: str, batch_size: int = 20) -> flo
         
         # Paid Models
         "meta-llama/llama-3.1-8b-instruct": (0.02, 0.05),
-        "google/gemini-2.5-flash-lite": (0.10, 0.40),
+        "google/gemini-2.0-flash-lite-preview-02-05": (0.10, 0.40),
     }
     
     # Default to 0 if unknown
     rates = pricing.get(model, (0.0, 0.0))
     input_rate, output_rate = rates
     
-    # 5. Calculate Real Cost
-    cost_input = (total_input_tokens / 1_000_000) * input_rate
-    cost_output = (total_output_tokens / 1_000_000) * output_rate
+    # 3. Calculate Real Cost
+    cost_input = (input_tokens_with_prompt / 1_000_000) * input_rate
+    cost_output = (output_tokens / 1_000_000) * output_rate
     total_real_cost = cost_input + cost_output
     
-    # 6. Apply 2x Multiplier for Display
+    # 4. Apply 2x Multiplier for Display
     display_cost = total_real_cost * 2
     
     return round(display_cost, 6)
