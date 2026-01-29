@@ -1,5 +1,5 @@
 """
-VietDub - Main Streamlit Application
+VietDub Solo - Main Streamlit Application
 Công cụ dubbing video cá nhân với AI
 """
 
@@ -30,7 +30,7 @@ from utils.file_utils import (
 # ============================================
 
 st.set_page_config(
-    page_title="VietDub",
+    page_title="VietDub Solo",
     page_icon="🎬",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -43,108 +43,225 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-    /* Dark theme overrides */
-    .stApp {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    /* Import Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+
+    /* Global Typography */
+    html, body, [class*="css"] {
+        font-family: 'Outfit', sans-serif;
     }
     
-    /* Header styling */
+    code {
+        font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Deep Space Theme Background */
+    .stApp {
+        background-color: #0F172A;
+        background-image: 
+            radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+            radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+            radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+        color: #E2E8F0;
+    }
+
+    /* Main Header */
     .main-header {
         text-align: center;
-        padding: 1rem 0;
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem 0 1rem 0;
+        background: linear-gradient(135deg, #A5B4FC 0%, #C084FC 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        font-size: 2.5rem;
-        font-weight: bold;
-        margin-bottom: 1rem;
+        font-size: 3.5rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        text-shadow: 0 0 30px rgba(192, 132, 252, 0.3);
+        margin-bottom: 0.5rem;
     }
     
-    /* Step indicator */
-    .step-indicator {
+    .sub-header {
+        text-align: center;
+        color: #94A3B8;
+        font-size: 1.1rem;
+        font-weight: 300;
+        margin-bottom: 3rem;
+    }
+
+    /* Step Indicator - Wizard Style */
+    .step-indicator-container {
         display: flex;
         justify-content: center;
-        gap: 2rem;
-        margin: 1rem 0 2rem 0;
+        align-items: center;
+        margin-bottom: 3rem;
+        position: relative;
     }
     
     .step-item {
-        text-align: center;
-        padding: 0.5rem 1rem;
-        border-radius: 10px;
-        background: rgba(255,255,255,0.1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        z-index: 2;
+        width: 120px;
     }
     
-    .step-item.active {
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    .step-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #1E293B;
+        border: 2px solid #334155;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: 600;
+        color: #64748B;
+        transition: all 0.3s ease;
+        margin-bottom: 0.5rem;
+    }
+    
+    .step-item.active .step-circle {
+        background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+        border-color: #8B5CF6;
+        color: white;
+        box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
+    }
+    
+    .step-item.completed .step-circle {
+        background: #10B981;
+        border-color: #10B981;
         color: white;
     }
     
-    /* Cards */
-    .glass-card {
-        background: rgba(255,255,255,0.05);
-        backdrop-filter: blur(10px);
-        border-radius: 15px;
-        padding: 1.5rem;
-        border: 1px solid rgba(255,255,255,0.1);
-        margin: 1rem 0;
+    .step-label {
+        font-size: 0.85rem;
+        color: #64748B;
+        font-weight: 500;
+        transition: all 0.3s ease;
     }
     
-    /* Upload zone */
+    .step-item.active .step-label {
+        color: #E2E8F0;
+        font-weight: 700;
+    }
+    
+    .step-line {
+        height: 2px;
+        background: #334155;
+        flex-grow: 1;
+        max-width: 100px;
+        margin: 0 -30px 25px -30px;
+        z-index: 1;
+    }
+    
+    .step-line.active {
+        background: linear-gradient(90deg, #10B981 0%, #6366F1 100%);
+    }
+
+    /* Glass Cards */
+    .glass-card {
+        background: rgba(30, 41, 59, 0.4);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 20px;
+        padding: 2rem;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        margin-bottom: 2rem;
+    }
+
+    /* Upload Zone */
     .upload-zone {
-        border: 2px dashed rgba(102, 126, 234, 0.5);
-        border-radius: 15px;
-        padding: 3rem;
+        border: 2px dashed #475569;
+        border-radius: 20px;
+        padding: 4rem 2rem;
         text-align: center;
-        background: rgba(102, 126, 234, 0.05);
-        transition: all 0.3s ease;
+        background: rgba(15, 23, 42, 0.5);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
     }
     
     .upload-zone:hover {
-        border-color: #667eea;
-        background: rgba(102, 126, 234, 0.1);
+        border-color: #8B5CF6;
+        background: rgba(139, 92, 246, 0.05);
+        transform: translateY(-2px);
     }
-    
+
     /* Buttons */
     .stButton > button {
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        border-radius: 10px;
-        padding: 0.75rem 2rem;
-        font-weight: bold;
-        transition: all 0.3s ease;
+        background: #1E293B;
+        color: #E2E8F0;
+        border: 1px solid #475569;
+        border-radius: 12px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
     
     .stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        border-color: #8B5CF6;
+        color: #8B5CF6;
+        background: #0F172A;
+        transform: translateY(-1px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     }
     
-    /* Sidebar styling */
-    .css-1d391kg {
-        background: rgba(0,0,0,0.3);
+    /* Primary Action Buttons (e.g., Translate All, Export) */
+    div[data-testid="stColumn"] > div > div > div > div > div > button {
+        /* Generic selector backup, specifics handled by Python layout */
     }
+
+    /* UI Components Overrides */
     
-    /* Data editor */
-    .stDataFrame {
+    /* Input Fields */
+    .stTextInput > div > div > input {
+        background-color: #1E293B;
+        border-color: #475569;
+        color: #E2E8F0;
         border-radius: 10px;
+    }
+    .stTextInput > div > div > input:focus {
+        border-color: #8B5CF6;
+        box-shadow: 0 0 0 1px #8B5CF6;
+    }
+
+    /* Select Box */
+    .stSelectbox > div > div > div {
+        background-color: #1E293B;
+        border-color: #475569;
+        color: #E2E8F0;
+        border-radius: 10px;
+    }
+
+    /* Expander */
+    .streamlit-expanderHeader {
+        background-color: #1E293B;
+        border-radius: 10px;
+        border: 1px solid #334155;
+    }
+
+    /* Data Editor */
+    div[data-testid="stDataEditor"] {
+        border-radius: 15px;
+        border: 1px solid #334155;
         overflow: hidden;
     }
-    
-    /* Progress bar */
-    .stProgress > div > div {
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+
+    /* Progress Bar */
+    .stProgress > div > div > div > div {
+        background: linear-gradient(90deg, #6366F1 0%, #EC4899 100%);
+    }
+
+    /* Sidebar */
+    [data-testid="stSidebar"] {
+        background-color: #0B1120;
+        border-right: 1px solid #1E293B;
     }
     
-    /* Hide Streamlit branding */
+    /* Hide Default Elements */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    
-    /* Status messages */
-    .stSuccess, .stInfo, .stWarning, .stError {
-        border-radius: 10px;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -397,6 +514,9 @@ def render_step2():
         return
     
     # Action buttons
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    st.markdown("#### 🛠️ Công cụ")
+    
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
@@ -470,6 +590,8 @@ def render_step2():
         if st.button("➡️ Tiếp tục Export", disabled=not (has_translations and has_audio), use_container_width=True):
             st.session_state.current_step = 3
             st.rerun()
+            
+    st.markdown('</div>', unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -535,14 +657,17 @@ def render_step3():
     col1, col2 = st.columns([1, 1])
     
     with col1:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         st.markdown("#### 📹 Video Preview")
         
         if st.session_state.video_path and os.path.exists(st.session_state.video_path):
             st.video(st.session_state.video_path)
         else:
             st.info("Video không khả dụng để preview")
+        st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         st.markdown("#### 📊 Thống kê")
         
         # Stats
@@ -557,6 +682,7 @@ def render_step3():
         if st.session_state.video_info:
             duration = st.session_state.video_info.get('duration', 0)
             st.metric("Duration", f"{duration:.1f}s")
+        st.markdown('</div>', unsafe_allow_html=True)
     
     st.markdown("---")
     st.markdown("#### 📤 Export Options")
@@ -573,7 +699,8 @@ def render_step3():
         export_srt_only = st.checkbox("Chỉ export SRT")
     
     # Export buttons
-    st.markdown("---")
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    st.markdown("#### 🎬 Xuất File")
     
     col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
     
@@ -678,6 +805,8 @@ def render_step3():
                         
                 except Exception as e:
                     st.error(f"Lỗi export: {str(e)}")
+                    
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Hiển thị preview nếu có
     if st.session_state.get('preview_path') and os.path.exists(st.session_state.preview_path):
@@ -696,38 +825,41 @@ def main():
     render_sidebar()
     
     # Header
-    st.markdown('<h1 class="main-header">🎬 VietDub</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-header">🎬 VietDub Solo</h1>', unsafe_allow_html=True)
     
     # Step indicator
-    steps = ["📥 Input", "✏️ Edit", "🎬 Export"]
-    cols = st.columns(len(steps))
+    steps = ["Input", "Edit", "Export"]
     
-    for i, (col, step) in enumerate(zip(cols, steps), 1):
-        with col:
-            if i == st.session_state.current_step:
-                st.markdown(f"""
-                <div style="text-align: center; padding: 10px; 
-                            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); 
-                            border-radius: 10px; color: white; font-weight: bold;">
-                    Step {i}: {step}
-                </div>
-                """, unsafe_allow_html=True)
-            elif i < st.session_state.current_step:
-                st.markdown(f"""
-                <div style="text-align: center; padding: 10px; 
-                            background: rgba(102, 126, 234, 0.3); 
-                            border-radius: 10px; color: #aaa;">
-                    ✅ Step {i}: {step}
-                </div>
-                """, unsafe_allow_html=True)
-            else:
-                st.markdown(f"""
-                <div style="text-align: center; padding: 10px; 
-                            background: rgba(255,255,255,0.1); 
-                            border-radius: 10px; color: #666;">
-                    Step {i}: {step}
-                </div>
-                """, unsafe_allow_html=True)
+    # Generate HTML for step indicator
+    html_steps = '<div class="step-indicator-container">'
+    
+    for i, step in enumerate(steps, 1):
+        # Determine status
+        if i < st.session_state.current_step:
+            status_class = "completed"
+            icon = "✓"
+        elif i == st.session_state.current_step:
+            status_class = "active"
+            icon = str(i)
+        else:
+            status_class = ""
+            icon = str(i)
+            
+        # Add connection line (except for first item)
+        if i > 1:
+            line_class = "active" if i <= st.session_state.current_step else ""
+            html_steps += f'<div class="step-line {line_class}"></div>'
+            
+        # Add step item
+        html_steps += f"""
+        <div class="step-item {status_class}">
+            <div class="step-circle">{icon}</div>
+            <div class="step-label">{step}</div>
+        </div>
+        """
+        
+    html_steps += '</div>'
+    st.markdown(html_steps, unsafe_allow_html=True)
     
     st.markdown("<br>", unsafe_allow_html=True)
     
